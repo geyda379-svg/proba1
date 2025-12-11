@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🛒 Магазин в Telegram</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Telegram Header -->
+        <div class="tg-header">
+            <button class="tg-back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1>🛍️ Магазин</h1>
+            <button class="tg-menu-btn" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <main>
+            <!-- User Info (будет заполняться Telegram) -->
+            <div class="user-card" id="userCard" style="display: none;">
+                <img src="" alt="Avatar" id="userAvatar">
+                <div class="user-info">
+                    <h3 id="userName"></h3>
+                    <p id="userBalance">Баланс: <span id="balanceAmount">0</span> ₽</p>
+                </div>
+            </div>
+
+            <!-- Products Filter -->
+            <div class="filter-bar">
+                <select id="categoryFilter" onchange="filterProducts()">
+                    <option value="all">Все категории</option>
+                    <option value="electronics">📱 Электроника</option>
+                    <option value="clothes">👕 Одежда</option>
+                    <option value="books">📚 Книги</option>
+                    <option value="other">📦 Другое</option>
+                </select>
+                <select id="sortFilter" onchange="sortProducts()">
+                    <option value="newest">Сначала новые</option>
+                    <option value="price_asc">Цена: по возрастанию</option>
+                    <option value="price_desc">Цена: по убыванию</option>
+                </select>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="productsContainer">
+                <div class="loader">
+                    <i class="fas fa-spinner fa-spin"></i> Загрузка товаров...
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-box-open"></i>
+                <h3>Магазин пуст</h3>
+                <p>Администратор еще не добавил товары</p>
+                <button class="tg-btn" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Обновить
+                </button>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" onclick="showPage('home')">
+                <i class="fas fa-home"></i>
+                <span>Главная</span>
+            </button>
+            <button class="nav-btn" onclick="showPage('cart')">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Корзина</span>
+                <span class="badge" id="cartCount">0</span>
+            </button>
+            <button class="nav-btn" onclick="showPage('orders')">
+                <i class="fas fa-history"></i>
+                <span>Заказы</span>
+            </button>
+            <button class="nav-btn" onclick="showPage('profile')">
+                <i class="fas fa-user"></i>
+                <span>Профиль</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Cart Modal -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🛒 Корзина</h2>
+                <button class="close-btn" onclick="closeModal('cartModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="cartItems">
+                <!-- Cart items will be here -->
+            </div>
+            <div class="modal-footer">
+                <div class="cart-total">
+                    <span>Итого:</span>
+                    <span id="cartTotal">0 ₽</span>
+                </div>
+                <button class="tg-btn primary" onclick="checkout()">
+                    <i class="fas fa-credit-card"></i> Оформить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
