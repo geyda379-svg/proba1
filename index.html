@@ -10,60 +10,406 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="mainContainer">
         <!-- Telegram Header -->
         <div class="tg-header">
-            <button class="tg-back-btn" onclick="goBack()">
+            <button class="tg-back-btn" id="backBtn">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            <h1>🛍️ Магазин</h1>
-            <button class="tg-menu-btn" onclick="toggleMenu()">
+            <h1 id="pageTitle">🛍️ Магазин</h1>
+            <button class="tg-menu-btn" id="menuBtn">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
 
-        <!-- Main Content -->
-        <main>
-            <!-- User Info (будет заполняться Telegram) -->
-            <div class="user-card" id="userCard" style="display: none;">
-                <img src="" alt="Avatar" id="userAvatar">
-                <div class="user-info">
-                    <h3 id="userName"></h3>
-                    <p id="userBalance">Баланс: <span id="balanceAmount">0</span> ₽</p>
-                </div>
+        <!-- Side Menu -->
+        <div class="side-menu" id="sideMenu">
+            <div class="menu-header">
+                <h3>Меню</h3>
+                <button class="close-menu" id="closeMenu">&times;</button>
             </div>
-
-            <!-- Products Filter -->
-            <div class="filter-bar">
-                <select id="categoryFilter" onchange="filterProducts()">
-                    <option value="all">Все категории</option>
-                    <option value="electronics">📱 Электроника</option>
-                    <option value="clothes">👕 Одежда</option>
-                    <option value="books">📚 Книги</option>
-                    <option value="other">📦 Другое</option>
-                </select>
-                <select id="sortFilter" onchange="sortProducts()">
-                    <option value="newest">Сначала новые</option>
-                    <option value="price_asc">Цена: по возрастанию</option>
-                    <option value="price_desc">Цена: по убыванию</option>
-                </select>
-            </div>
-
-            <!-- Products Grid -->
-            <div class="products-grid" id="productsContainer">
-                <div class="loader">
-                    <i class="fas fa-spinner fa-spin"></i> Загрузка товаров...
-                </div>
-            </div>
-
-            <!-- Empty State -->
-            <div class="empty-state" id="emptyState">
-                <i class="fas fa-box-open"></i>
-                <h3>Магазин пуст</h3>
-                <p>Администратор еще не добавил товары</p>
-                <button class="tg-btn" onclick="location.reload()">
-                    <i class="fas fa-sync-alt"></i> Обновить
+            <div class="menu-items">
+                <button class="menu-item" onclick="showPage('home')">
+                    <i class="fas fa-home"></i> Главная
                 </button>
+                <button class="menu-item" onclick="showPage('cart')">
+                    <i class="fas fa-shopping-cart"></i> Корзина
+                    <span class="badge" id="menuCartCount">0</span>
+                </button>
+                <button class="menu-item" onclick="showPage('orders')">
+                    <i class="fas fa-history"></i> Мои заказы
+                </button>
+                <button class="menu-item" onclick="showPage('favorites')">
+                    <i class="fas fa-heart"></i> Избранное
+                    <span class="badge" id="favoritesCount">0</span>
+                </button>
+                <button class="menu-item" onclick="showPage('profile')">
+                    <i class="fas fa-user"></i> Профиль
+                </button>
+                <button class="menu-item" onclick="showPage('contacts')">
+                    <i class="fas fa-phone"></i> Контакты
+                </button>
+                <button class="menu-item" onclick="showPage('about')">
+                    <i class="fas fa-info-circle"></i> О магазине
+                </button>
+                <button class="menu-item" onclick="showAdminPanel()">
+                    <i class="fas fa-cog"></i> Админ-панель
+                </button>
+                <div class="menu-divider"></div>
+                <button class="menu-item logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="contentArea">
+            <!-- Home Page (default) -->
+            <div class="page active" id="homePage">
+                <!-- User Info -->
+                <div class="user-card" id="userCard">
+                    <img src="" alt="Avatar" id="userAvatar" onerror="this.src='https://via.placeholder.com/50'">
+                    <div class="user-info">
+                        <h3 id="userName">Гость</h3>
+                        <p id="userBalance">Баланс: <span id="balanceAmount">0</span> ₽</p>
+                    </div>
+                    <button class="balance-btn" onclick="showAddBalanceModal()">
+                        <i class="fas fa-plus"></i> Пополнить
+                    </button>
+                </div>
+
+                <!-- Products Filter -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Поиск товаров..." oninput="searchProducts()">
+                        <button class="clear-search" onclick="clearSearch()" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="filter-controls">
+                        <select id="categoryFilter" onchange="filterProducts()">
+                            <option value="all">Все категории</option>
+                            <option value="electronics">📱 Электроника</option>
+                            <option value="clothes">👕 Одежда</option>
+                            <option value="books">📚 Книги</option>
+                            <option value="food">🍔 Еда</option>
+                            <option value="other">📦 Другое</option>
+                        </select>
+                        <select id="sortFilter" onchange="sortProducts()">
+                            <option value="newest">Сначала новые</option>
+                            <option value="price_asc">Цена ↑</option>
+                            <option value="price_desc">Цена ↓</option>
+                            <option value="popular">Популярные</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsContainer">
+                    <div class="loader">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка товаров...
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-box-open"></i>
+                    <h3>Товары не найдены</h3>
+                    <p>Попробуйте изменить фильтры поиска</p>
+                    <button class="tg-btn" onclick="clearFilters()">
+                        <i class="fas fa-filter"></i> Сбросить фильтры
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cart Page -->
+            <div class="page" id="cartPage">
+                <div class="page-header">
+                    <h2><i class="fas fa-shopping-cart"></i> Корзина</h2>
+                    <button class="clear-cart-btn" onclick="clearCart()" id="clearCartBtn">
+                        <i class="fas fa-trash"></i> Очистить
+                    </button>
+                </div>
+                
+                <div class="cart-container" id="cartItemsContainer">
+                    <!-- Cart items will be loaded here -->
+                </div>
+                
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Товаров:</span>
+                        <span id="cartItemsCount">0 шт.</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Сумма:</span>
+                        <span id="cartSubtotal">0 ₽</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Доставка:</span>
+                        <span id="cartShipping">0 ₽</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Итого:</span>
+                        <span id="cartTotal">0 ₽</span>
+                    </div>
+                    <button class="tg-btn primary checkout-btn" onclick="checkout()" id="checkoutBtn">
+                        <i class="fas fa-credit-card"></i> Оформить заказ
+                    </button>
+                    <button class="tg-btn secondary" onclick="continueShopping()">
+                        <i class="fas fa-arrow-left"></i> Продолжить покупки
+                    </button>
+                </div>
+            </div>
+
+            <!-- Orders Page -->
+            <div class="page" id="ordersPage">
+                <div class="page-header">
+                    <h2><i class="fas fa-history"></i> История заказов</h2>
+                    <button class="refresh-btn" onclick="loadOrders()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div class="orders-container" id="ordersContainer">
+                    <div class="empty-orders">
+                        <i class="fas fa-history"></i>
+                        <h3>Заказов пока нет</h3>
+                        <p>Совершите свой первый заказ!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Favorites Page -->
+            <div class="page" id="favoritesPage">
+                <div class="page-header">
+                    <h2><i class="fas fa-heart"></i> Избранное</h2>
+                    <button class="clear-btn" onclick="clearFavorites()">
+                        <i class="fas fa-trash"></i> Очистить
+                    </button>
+                </div>
+                
+                <div class="favorites-container" id="favoritesContainer">
+                    <!-- Favorite products will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div class="page" id="profilePage">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <img src="" alt="Avatar" id="profileAvatar" onerror="this.src='https://via.placeholder.com/100'">
+                        <button class="change-avatar" onclick="changeAvatar()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                    </div>
+                    <h2 id="profileName">Гость</h2>
+                    <p class="profile-id">ID: <span id="profileUserId">неизвестно</span></p>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalOrders">0</span>
+                            <span class="stat-label">Заказов</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-heart"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalFavorites">0</span>
+                            <span class="stat-label">Избранное</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-coins"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalSpent">0</span>
+                            <span class="stat-label">Потрачено</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button class="profile-action" onclick="showAddBalanceModal()">
+                        <i class="fas fa-wallet"></i>
+                        <span>Пополнить баланс</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="profile-action" onclick="showAddressModal()">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Адрес доставки</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="profile-action" onclick="showSettings()">
+                        <i class="fas fa-cog"></i>
+                        <span>Настройки</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="profile-action" onclick="showHelp()">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Помощь</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contacts Page -->
+            <div class="page" id="contactsPage">
+                <div class="page-header">
+                    <h2><i class="fas fa-phone"></i> Контакты</h2>
+                </div>
+                
+                <div class="contacts-container">
+                    <div class="contact-card">
+                        <i class="fas fa-headset"></i>
+                        <h3>Техническая поддержка</h3>
+                        <p>Круглосуточно, 24/7</p>
+                        <a href="https://t.me/support_bot" class="contact-link">
+                            <i class="fab fa-telegram"></i> @support_bot
+                        </a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Заказы и доставка</h3>
+                        <p>Пн-Пт: 9:00-21:00</p>
+                        <a href="https://t.me/orders_bot" class="contact-link">
+                            <i class="fab fa-telegram"></i> @orders_bot
+                        </a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <i class="fas fa-comments"></i>
+                        <h3>Вопросы и предложения</h3>
+                        <p>Мы всегда на связи</p>
+                        <a href="https://t.me/feedback_bot" class="contact-link">
+                            <i class="fab fa-telegram"></i> @feedback_bot
+                        </a>
+                    </div>
+                    
+                    <div class="contact-info">
+                        <h3><i class="fas fa-info-circle"></i> Информация</h3>
+                        <p><strong>Email:</strong> support@example.com</p>
+                        <p><strong>Телефон:</strong> +7 (999) 123-45-67</p>
+                        <p><strong>Адрес:</strong> г. Москва, ул. Примерная, д. 1</p>
+                        <p><strong>ИНН:</strong> 1234567890</p>
+                        <p><strong>ОГРН:</strong> 1234567890123</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Page -->
+            <div class="page" id="aboutPage">
+                <div class="page-header">
+                    <h2><i class="fas fa-info-circle"></i> О магазине</h2>
+                </div>
+                
+                <div class="about-container">
+                    <div class="about-card">
+                        <h3>🎯 Наша миссия</h3>
+                        <p>Мы создаем удобный и современный шоппинг-опыт прямо в Telegram. Наша цель - сделать покупки простыми, быстрыми и безопасными.</p>
+                    </div>
+                    
+                    <div class="about-card">
+                        <h3>⚡ Преимущества</h3>
+                        <ul class="advantages-list">
+                            <li><i class="fas fa-bolt"></i> Мгновенные покупки в 1 клик</li>
+                            <li><i class="fas fa-shield-alt"></i> Безопасная оплата</li>
+                            <li><i class="fas fa-truck"></i> Быстрая доставка</li>
+                            <li><i class="fas fa-headset"></i> Круглосуточная поддержка</li>
+                            <li><i class="fas fa-percentage"></i> Выгодные цены</li>
+                            <li><i class="fas fa-gift"></i> Бонусная программа</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="about-card">
+                        <h3>📊 Статистика</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number">10,000+</span>
+                                <span class="stat-label">Довольных клиентов</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">5,000+</span>
+                                <span class="stat-label">Товаров в каталоге</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">99%</span>
+                                <span class="stat-label">Положительных отзывов</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number">24/7</span>
+                                <span class="stat-label">Работаем для вас</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-card">
+                        <h3>🤝 Сотрудничество</h3>
+                        <p>Хотите стать партнером или разместить свои товары в нашем магазине? Пишите нам:</p>
+                        <button class="tg-btn" onclick="openTelegram('@partnership_bot')">
+                            <i class="fab fa-telegram"></i> Для партнеров
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div class="page" id="adminPage" style="display: none;">
+                <div class="page-header">
+                    <h2><i class="fas fa-cog"></i> Админ-панель</h2>
+                    <button class="refresh-btn" onclick="loadAdminData()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                
+                <div class="admin-container">
+                    <div class="admin-stats">
+                        <div class="admin-stat">
+                            <i class="fas fa-box"></i>
+                            <span>Товаров: <strong id="adminProductCount">0</strong></span>
+                        </div>
+                        <div class="admin-stat">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Заказов: <strong id="adminOrderCount">0</strong></span>
+                        </div>
+                        <div class="admin-stat">
+                            <i class="fas fa-users"></i>
+                            <span>Пользователей: <strong id="adminUserCount">0</strong></span>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-actions">
+                        <h3>Управление товарами</h3>
+                        <button class="admin-action" onclick="showAddProductModal()">
+                            <i class="fas fa-plus"></i> Добавить товар
+                        </button>
+                        <button class="admin-action" onclick="showEditProducts()">
+                            <i class="fas fa-edit"></i> Редактировать товары
+                        </button>
+                        <button class="admin-action" onclick="showImportExport()">
+                            <i class="fas fa-file-import"></i> Импорт/Экспорт
+                        </button>
+                        
+                        <h3>Управление заказами</h3>
+                        <button class="admin-action" onclick="showAllOrders()">
+                            <i class="fas fa-list"></i> Все заказы
+                        </button>
+                        <button class="admin-action" onclick="showPendingOrders()">
+                            <i class="fas fa-clock"></i> Ожидающие
+                        </button>
+                        
+                        <h3>Аналитика</h3>
+                        <button class="admin-action" onclick="showStatistics()">
+                            <i class="fas fa-chart-bar"></i> Статистика
+                        </button>
+                        <button class="admin-action" onclick="showRevenue()">
+                            <i class="fas fa-money-bill-wave"></i> Выручка
+                        </button>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -76,11 +422,12 @@
             <button class="nav-btn" onclick="showPage('cart')">
                 <i class="fas fa-shopping-cart"></i>
                 <span>Корзина</span>
-                <span class="badge" id="cartCount">0</span>
+                <span class="badge" id="bottomCartCount">0</span>
             </button>
-            <button class="nav-btn" onclick="showPage('orders')">
-                <i class="fas fa-history"></i>
-                <span>Заказы</span>
+            <button class="nav-btn" onclick="showPage('favorites')">
+                <i class="fas fa-heart"></i>
+                <span>Избранное</span>
+                <span class="badge" id="bottomFavoritesCount">0</span>
             </button>
             <button class="nav-btn" onclick="showPage('profile')">
                 <i class="fas fa-user"></i>
@@ -89,27 +436,174 @@
         </nav>
     </div>
 
-    <!-- Cart Modal -->
-    <div class="modal" id="cartModal">
+    <!-- Modals -->
+    <div class="modal" id="productModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🛒 Корзина</h2>
-                <button class="close-btn" onclick="closeModal('cartModal')">&times;</button>
+                <h2 id="modalProductTitle"></h2>
+                <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
             </div>
-            <div class="modal-body" id="cartItems">
-                <!-- Cart items will be here -->
+            <div class="modal-body">
+                <div class="product-modal-image" id="modalProductImage"></div>
+                <div class="product-modal-info">
+                    <div class="product-modal-price" id="modalProductPrice"></div>
+                    <div class="product-modal-description" id="modalProductDescription"></div>
+                    <div class="product-modal-details">
+                        <div class="detail-item">
+                            <i class="fas fa-tag"></i>
+                            <span id="modalProductCategory"></span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-box"></i>
+                            <span id="modalProductStock"></span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-calendar"></i>
+                            <span id="modalProductDate"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <div class="cart-total">
-                    <span>Итого:</span>
-                    <span id="cartTotal">0 ₽</span>
+                <div class="quantity-control">
+                    <button onclick="decreaseQuantity()">-</button>
+                    <span id="productQuantity">1</span>
+                    <button onclick="increaseQuantity()">+</button>
                 </div>
-                <button class="tg-btn primary" onclick="checkout()">
-                    <i class="fas fa-credit-card"></i> Оформить заказ
+                <div class="modal-actions">
+                    <button class="tg-btn secondary" onclick="toggleFavorite(currentProductId)">
+                        <i class="far fa-heart" id="favoriteIcon"></i> В избранное
+                    </button>
+                    <button class="tg-btn primary" onclick="addToCartModal()">
+                        <i class="fas fa-cart-plus"></i> Добавить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Balance Modal -->
+    <div class="modal" id="balanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-wallet"></i> Пополнение баланса</h2>
+                <button class="close-btn" onclick="closeModal('balanceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="balance-options">
+                    <div class="balance-option" onclick="selectBalanceOption(100)">
+                        <span class="amount">100 ₽</span>
+                        <span class="bonus">+0%</span>
+                    </div>
+                    <div class="balance-option" onclick="selectBalanceOption(500)">
+                        <span class="amount">500 ₽</span>
+                        <span class="bonus">+5%</span>
+                    </div>
+                    <div class="balance-option" onclick="selectBalanceOption(1000)">
+                        <span class="amount">1 000 ₽</span>
+                        <span class="bonus">+10%</span>
+                    </div>
+                    <div class="balance-option" onclick="selectBalanceOption(5000)">
+                        <span class="amount">5 000 ₽</span>
+                        <span class="bonus">+15%</span>
+                    </div>
+                </div>
+                <div class="custom-balance">
+                    <input type="number" id="customAmount" placeholder="Другая сумма" min="10" max="50000">
+                    <button onclick="addCustomBalance()">Пополнить</button>
+                </div>
+                <div class="payment-methods">
+                    <h3>Способ оплаты:</h3>
+                    <label class="payment-method">
+                        <input type="radio" name="payment" value="card" checked>
+                        <i class="fas fa-credit-card"></i> Банковская карта
+                    </label>
+                    <label class="payment-method">
+                        <input type="radio" name="payment" value="yoomoney">
+                        <i class="fas fa-wallet"></i> ЮMoney
+                    </label>
+                    <label class="payment-method">
+                        <input type="radio" name="payment" value="qiwi">
+                        <i class="fas fa-qrcode"></i> QIWI
+                    </label>
+                    <label class="payment-method">
+                        <input type="radio" name="payment" value="crypto">
+                        <i class="fab fa-bitcoin"></i> Криптовалюта
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="tg-btn primary" onclick="processPayment()">
+                    <i class="fas fa-lock"></i> Безопасная оплата
                 </button>
             </div>
         </div>
     </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-credit-card"></i> Оформление заказа</h2>
+                <button class="close-btn" onclick="closeModal('checkoutModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="order-summary">
+                    <h3>Ваш заказ:</h3>
+                    <div id="orderItemsList"></div>
+                    <div class="order-total">
+                        <span>Итого к оплате:</span>
+                        <span id="orderTotalAmount">0 ₽</span>
+                    </div>
+                </div>
+                
+                <div class="delivery-options">
+                    <h3>Доставка:</h3>
+                    <label class="delivery-option">
+                        <input type="radio" name="delivery" value="pickup" checked>
+                        <i class="fas fa-store"></i> Самовывоз (бесплатно)
+                    </label>
+                    <label class="delivery-option">
+                        <input type="radio" name="delivery" value="courier">
+                        <i class="fas fa-truck"></i> Курьер (300 ₽)
+                    </label>
+                    <label class="delivery-option">
+                        <input type="radio" name="delivery" value="post">
+                        <i class="fas fa-envelope"></i> Почта России (200 ₽)
+                    </label>
+                </div>
+                
+                <div class="address-input" id="addressSection" style="display: none;">
+                    <h3>Адрес доставки:</h3>
+                    <input type="text" id="deliveryAddress" placeholder="Введите адрес">
+                </div>
+                
+                <div class="payment-options">
+                    <h3>Оплата:</h3>
+                    <label class="payment-option">
+                        <input type="radio" name="checkoutPayment" value="balance" checked>
+                        <i class="fas fa-wallet"></i> Баланс (доступно: <span id="availableBalance">0</span> ₽)
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="checkoutPayment" value="card">
+                        <i class="fas fa-credit-card"></i> Картой онлайн
+                    </label>
+                    <label class="payment-option">
+                        <input type="radio" name="checkoutPayment" value="cash">
+                        <i class="fas fa-money-bill-wave"></i> При получении
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="tg-btn primary" onclick="confirmOrder()">
+                    <i class="fas fa-check"></i> Подтвердить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
 
     <script src="script.js"></script>
 </body>
